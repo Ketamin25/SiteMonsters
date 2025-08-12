@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nitro Tools</title>
+  <style>
+    body{margin:0;background:#0b0e13;color:#e8edf6;font:16px/1.5 system-ui}
+    .wrap{max-width:800px;margin:0 auto;padding:20px}
+    .card{border:1px solid #213047;border-radius:12px;padding:16px;background:#0f1420}
+    .btn{padding:10px 14px;border-radius:10px;border:1px solid #213047;background:#18263c;color:#fff;cursor:pointer}
+    .btn.red{background:#e4002b;border:none}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input[type=text]{width:100%;max-width:420px;padding:8px 10px;border-radius:8px;border:1px solid #213047;background:#0b1220;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Nitro Poker Tools — demo</h1>
+
+    <div class="card row">
+      <button id="login" class="btn">Войти Google</button>
+      <span id="userBox">не авторизован</span>
+      <button id="logout" class="btn red" style="display:none">Выйти</button>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h3>Сохранить тестовую запись в Firestore</h3>
+      <div class="row">
+        <button id="save" class="btn">Сохранить запись</button>
+        <span id="saveMsg"></span>
+      </div>
+
+  <!-- подключаем клиентский код как ES‑module -->
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
