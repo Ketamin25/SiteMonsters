@@ -1,4 +1,4 @@
-// --- УКАЖИ ИМЕНА ТВОИХ ФАЙЛОВ (лежат в корне репозитория) ---
+// --- УКАЖИ ИМЕНА ТВОИХ ФАЙЛОВ ---
 const TOOLS = [
   { id:'bluff-calc',    title:'Bluff Calc',    url:'./Bluff-Calc.html' },
   { id:'call-calc',     title:'Call Calc',     url:'./Call-Calc.html' },
@@ -26,7 +26,7 @@ function setActive(id){
 }
 function navigate(id){
   const tool = TOOLS.find(x=>x.id===id) || TOOLS[0];
-  frame.src = tool.url;       // весь JS внутри страниц работает, потому что это iframe
+  frame.src = tool.url;
   setActive(tool.id);
   location.hash = `#/${tool.id}`;
 }
@@ -35,19 +35,22 @@ function readRoute(){
   navigate(m?m[1]:TOOLS[0].id);
 }
 
-/* ---------- Firebase: Google Sign‑In (iOS friendly) ---------- */
+/* ---------- Firebase: Google Sign-In ---------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// ВСТАВЬ РЕАЛЬНЫЕ ЗНАЧЕНИЯ СВОЕГО ПРОЕКТА (из Firebase Project settings → Web app)
+// ТВОЙ РЕАЛЬНЫЙ КОНФИГ
 const firebaseConfig = {
-  apiKey:     "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId:  "YOUR_PROJECT_ID",
-  appId:      "YOUR_APP_ID",
+  apiKey: "AIzaSyAJ3UzHfCBJMeTqcrxMrqYUlEADJpx_Sh0",
+  authDomain: "nitromonsters-1dba4.firebaseapp.com",
+  projectId: "nitromonsters-1dba4",
+  storageBucket: "nitromonsters-1dba4.firebasestorage.app",
+  messagingSenderId: "1084195004228",
+  appId: "1:1084195004228:web:00360cfa707cc4df4a4111",
+  measurementId: "G-3PJ4J2J259"
 };
 
 const app  = initializeApp(firebaseConfig);
@@ -60,13 +63,12 @@ const userBox   = document.getElementById('userBox');
 
 loginBtn.onclick = async ()=>{
   try{
-    await signInWithPopup(auth, prov);            // нормальный путь
+    await signInWithPopup(auth, prov);
   }catch(e){
-    // iOS/Safari часто блокирует pop-up → делаем redirect flow
     await signInWithRedirect(auth, prov);
   }
 };
-getRedirectResult(auth).catch(()=>{});            // завершить redirect, если он был
+getRedirectResult(auth).catch(()=>{});
 logoutBtn.onclick = ()=>signOut(auth);
 
 onAuthStateChanged(auth, (user)=>{
