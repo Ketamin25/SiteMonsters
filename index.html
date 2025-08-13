@@ -1,37 +1,47 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nitro Tools</title>
-  <style>
-    body{margin:0;background:#0b0e13;color:#e8edf6;font:16px/1.5 system-ui}
-    .wrap{max-width:800px;margin:0 auto;padding:20px}
-    .card{border:1px solid #213047;border-radius:12px;padding:16px;background:#0f1420}
-    .btn{padding:10px 14px;border-radius:10px;border:1px solid #213047;background:#18263c;color:#fff;cursor:pointer}
-    .btn.red{background:#e4002b;border:none}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input[type=text]{width:100%;max-width:420px;padding:8px 10px;border-radius:8px;border:1px solid #213047;background:#0b1220;color:#fff}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Nitro Poker Tools — Hub</title>
+<style>
+  :root{--bg:#0b0e13;--panel:#11151f;--text:#e8edf6;--muted:#9aa7b6;--accent:#63b3ff;--border:#1e2636;--red:#e4002b}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.55 system-ui}
+  .wrap{max-width:1200px;margin:0 auto;padding:12px}
+  .nav{display:flex;gap:8px;justify-content:space-between;align-items:center;background:#0f1420;border:1px solid var(--border);border-radius:12px;padding:8px 10px;position:sticky;top:8px;z-index:5}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#141b2a;cursor:pointer}
+  .tab.active{outline:2px solid #304063}
+  .right{display:flex;gap:8px;align-items:center}
+  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#182236;color:#fff;cursor:pointer}
+  .btn.red{background:var(--red);border:none}
+  .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  #shareLink{width:340px;max-width:50vw}
+  #stage{margin-top:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#0e121c;min-height:70vh}
+  iframe{display:block;width:100%;height:75vh;border:0}
+  @media (max-width:720px){ #shareLink{width:220px} .tab{padding:6px 10px} iframe{height:78vh} }
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Nitro Poker Tools — demo</h1>
-
-    <div class="card row">
-      <button id="login" class="btn">Войти Google</button>
-      <span id="userBox">не авторизован</span>
-      <button id="logout" class="btn red" style="display:none">Выйти</button>
+<div class="wrap">
+  <div class="nav">
+    <div class="tabs" id="tabs"></div>
+    <div class="right">
+      <button class="btn" id="btnShare">Поделиться</button>
+      <input id="shareLink" class="mono" type="text" readonly placeholder="ссылка появится здесь">
+      <span id="authBox"><button class="btn" id="login">Войти Google</button></span>
     </div>
+  </div>
 
-    <div class="card" style="margin-top:12px">
-      <h3>Сохранить тестовую запись в Firestore</h3>
-      <div class="row">
-        <button id="save" class="btn">Сохранить запись</button>
-        <span id="saveMsg"></span>
-      </div>
+  <div id="stage">
+    <iframe id="frame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+  </div>
 
-  <!-- подключаем клиентский код как ES‑module -->
-  <script type="module" src="./app.js"></script>
+  <p style="color:#9aa7b6;font-size:12px;margin-top:10px">
+    Нравится скорость? Держи эти утилиты под рукой на <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#63b3ff">gptonline.ai</a>
+  </p>
+</div>
+
+<script type="module" src="./app.js"></script>
 </body>
 </html>
