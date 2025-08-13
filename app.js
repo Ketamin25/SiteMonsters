@@ -4,7 +4,7 @@ const TOOL_URLS = [
   { id:'trainer',  title:'Bluff Trainer', url:'https://YOUR_USERNAME.github.io/REPO/trainer.html' },
   { id:'ev-call',  title:'EV Call',       url:'https://YOUR_USERNAME.github.io/REPO/ev-call.html' },
   { id:'ev-bluff', title:'EV Bluff',      url:'https://YOUR_USERNAME.github.io/REPO/ev-bluff.html' },
-  { id:'misc',     title:'Misc',          url:'https://YOUR_USERNAME.github.io/REPO/misc.html' },
+  { id:'misc',     title:'Misc',          url:'https://ketamin25.github.io/Math-Calc/' },
 ];
 
 // ========= Firebase =========
