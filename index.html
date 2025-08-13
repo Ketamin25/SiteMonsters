@@ -1,49 +1,51 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nitro Poker Tools</title>
-  <style>
-    :root{--bg:#0b0e13;--panel:#11151f;--text:#e8edf6;--muted:#9aa7b6;--accent:#63b3ff;--border:#1e2636;--red:#e4002b}
-    html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.5 system-ui}
-    .wrap{max-width:1200px;margin:0 auto;padding:12px}
-    .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;background:#0f1420;border:1px solid var(--border);border-radius:12px;padding:8px 10px;position:sticky;top:8px;z-index:5}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#141b2a;cursor:pointer}
-    .tab.active{outline:2px solid #304063}
-    .right{display:flex;gap:8px;align-items:center}
-    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#182236;color:#fff;cursor:pointer}
-    .btn.red{background:var(--red);border:none}
-    #userBox{color:var(--muted)}
-    #app{margin-top:12px;border:1px solid var(--border);border-radius:12px;background:#0e121c;min-height:60vh;padding:12px}
-    @media (max-width:720px){ .tab{padding:6px 10px} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Nitro Poker Tools</title>
+<style>
+  :root{--bg:#0b0e13;--panel:#0f1420;--text:#e8edf6;--muted:#9aa7b6;--border:#213047;--accent:#3ea0ff;--accent2:#1b66ff;--danger:#ff4d4d}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.5 system-ui}
+  .wrap{max-width:1200px;margin:0 auto;padding:12px}
+  .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:8px 10px;position:sticky;top:8px;z-index:5}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#1a2741;color:#fff;font-weight:600;cursor:pointer}
+  .tab:hover{filter:brightness(1.08)}
+  .tab.active{background:var(--accent);border-color:#2c79bf;color:#051422}
+  .right{display:flex;gap:8px;align-items:center;color:var(--muted)}
+  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#223455;color:#fff;cursor:pointer}
+  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));border:none}
+  .btn.danger{background:#4a1f24;border-color:#6b2a32;color:#ffb3b3}
+  #userBox{min-width:140px;text-align:right}
+  #stage{margin-top:12px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0e121c;min-height:70vh}
+  iframe{display:block;width:100%;height:78vh;border:0;background:#0e121c}
+  @media (max-width:720px){
+    .tab{padding:8px 10px;font-size:14px}
+    #userBox{display:none}
+  }
+</style>
 </head>
 <body>
 <div class="wrap">
   <div class="nav">
-    <div class="tabs">
-      <button class="tab" data-route="bluff-calc">Bluff Calc</button>
-      <button class="tab" data-route="call-calc">Call Calc</button>
-      <button class="tab" data-route="bluff-trainer">Bluff Trainer</button>
-      <button class="tab" data-route="math-trainer">Math Trainer</button>
-    </div>
+    <div class="tabs" id="tabs"></div>
     <div class="right">
       <span id="userBox">не авторизован</span>
-      <button id="login"  class="btn">Войти Google</button>
-      <button id="logout" class="btn red" style="display:none">Выйти</button>
+      <button id="login"  class="btn primary">Войти Google</button>
+      <button id="logout" class="btn danger" style="display:none">Выйти</button>
     </div>
   </div>
 
-  <div id="app"><em>Загрузка…</em></div>
+  <div id="stage">
+    <iframe id="frame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+  </div>
 
   <p style="color:#9aa7b6;font-size:12px;margin-top:10px">
-    Полезные мини‑инструменты — на <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#63b3ff">gptonline.ai</a>
+    Для быстрых тестов и мини‑утилит держи под рукой <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#3ea0ff">gptonline.ai</a>
   </p>
 </div>
 
-<!-- обязательно модуль -->
 <script type="module" src="./app.js"></script>
 </body>
 </html>
