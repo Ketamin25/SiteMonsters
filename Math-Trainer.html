@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ментальный счёт — уровни, XP и уникальные базы</title>
+<meta name="description" content="Тренажёр устного счёта с уровнями и XP, уникальными базами 2×2, 2×2×2, 3×3, 3×3×3, сериями, историей и входом (Google/Email).">
+<style>
+  :root{
+    --bg:#0e1224; --card:#121a2f; --text:#e6eefc; --muted:#9fb0c9; --border:#1e2a45; --accent:#5b8cff;
+    --good:#22c55e; --bad:#ef4444; --ring:rgba(91,140,255,.35);
+    --radius:18px; --shadow:0 18px 50px rgba(4,10,28,.35); --surface:#0b1327;
+  }
+  body.light{
+    --bg:#f5f7ff; --card:#ffffff; --text:#0f172a; --muted:#64748b; --border:#e6edf6; --accent:#2563eb;
+    --good:#16a34a; --bad:#dc2626; --ring:rgba(37,99,235,.25); --surface:#eef3fb; --shadow:0 14px 36px rgba(2,6,23,.12);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    color:var(--text); background:radial-gradient(1200px 600px at -10% -10%, #182347 0%, var(--bg) 55%) fixed;
+    transition:background .35s,color .25s; display:grid; place-items:start center; padding:24px}
+  .app{width:100%; max-width:1240px; display:grid; gap:16px}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(0,0,0,.03)), var(--card);
+    border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
+  .panel{padding:18px 18px 12px}
+  .quiz{padding:20px; display:grid; gap:14px}
+  .row{display:grid; gap:16px}
+  @media (min-width:980px){ .row{grid-template-columns:1.6fr 1fr} }
+
+  /* Header */
+  .level-header{display:flex; gap:16px; align-items:center; padding:16px 18px;
+    background:linear-gradient(135deg, #5b8cff, #00d4ff); color:#fff; border-radius:var(--radius);
+    box-shadow:0 18px 40px rgba(50,120,255,.25)}
+  .avatar{width:76px; height:76px; border-radius:999px; background:#0ea5e9; display:grid; place-items:center;
+    font-weight:800; font-size:28px; overflow:hidden; box-shadow:inset 0 0 0 6px rgba(255,255,255,.25)}
+  .avatar img{width:100%; height:100%; object-fit:cover}
+  .level-meta{flex:1; display:grid; gap:8px}
+  .level-top{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px}
+  .level-top .lvl{font-size:22px; font-weight:800; letter-spacing:.3px}
+  .level-top .rank{opacity:.92; font-size:14px}
+  .level-note{font-size:13px; opacity:.96}
+  .level-bar{position:relative; height:12px; background:rgba(255,255,255,.35); border-radius:999px; overflow:hidden}
+  .level-bar>i{position:absolute; inset:0; width:0%; background:linear-gradient(90deg,#c084fc,#22c55e); transition:width .45s ease}
+
+  /* Quiz */
+  .task{font-size:36px; letter-spacing:.3px; text-align:center}
+  .stats{display:flex; gap:12px; flex-wrap:wrap; font-size:14px; color:var(--muted)}
+  .stat{padding:10px 12px; background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:14px}
+  label{font-size:13px; color:var(--muted); display:block; margin-bottom:2px}
+  input[type="number"],select{width:100%; padding:12px 14px; font-size:17px; border:1px solid var(--border); border-radius:14px; outline:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.02)), var(--card); color:var(--text)}
+  input::placeholder{color:rgba(127,148,178,.7)}
+  input:focus,select:focus{border-color:var(--accent); box-shadow:0 0 0 6px var(--ring)}
+  .btn{padding:12px 16px; font-size:16px; border-radius:14px; border:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.04)), var(--card); color:var(--text); cursor:pointer}
+  .btn.primary{background:linear-gradient(135deg,#5b8cff,#22c55e); color:#fff; border-color:transparent}
+  .btn.small{padding:8px 10px; font-size:14px}
+  .btn.block{width:100%}
+  .divider{height:1px; background:var(--border); margin:10px 0}
+  .pill{padding:7px 12px; background:var(--surface); border:1px solid var(--border); border-radius:999px; font-size:13px; color:var(--text)}
+  .rowmini{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .feedback{min-height:28px; font-size:15px}
+  .feedback.good{color:var(--good)}
+  .feedback.bad{color:var(--bad)}
+  details{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px}
+  summary{cursor:pointer; color:var(--text)}
+  .hint{font-size:13px; color:var(--muted)}
+  table{width:100%; border-collapse:collapse}
+  th,td{border-top:1px solid var(--border); padding:9px 10px; text-align:left; font-size:14px}
+  th{background:var(--surface); color:var(--muted)}
+
+  /* Timer bar */
+  .timerwrap{margin-top:2px}
+  .timerbar{position:relative; height:10px; background:#1e2a45; border-radius:999px; overflow:hidden}
+  .timerbar>i{position:absolute; left:0; top:0; bottom:0; width:0%; background:linear-gradient(90deg,#22c55e,#ef4444)}
+</style>
+</head>
+<body class="dark">
+<div class="app">
+
+  <!-- HEADER -->
+  <section class="card level-header">
+    <div class="avatar" id="avatar">E</div>
+    <div class="level-meta">
+      <div class="level-top">
+        <div class="lvl">Уровень <span id="lvl">1</span> <span class="rank" id="rank">• Ученик</span></div>
+        <div class="level-note">XP: <b id="xp">0</b> • В этом уровне: <b id="inlevel">0</b>/<b id="span">100</b> <span id="xpgain" style="margin-left:8px"></span> <span id="helloUser"></span></div>
+      </div>
+      <div class="level-bar"><i id="lvlbar"></i></div>
+    </div>
+    <button id="theme" class="btn small" title="Переключить тему">🌙 Тема</button>
+  </section>
+
+  <div class="row">
+    <!-- RIGHT: QUIZ -->
+    <section class="card quiz" aria-live="polite">
+      <div class="rowmini">
+        <span class="pill">LIVE: <b id="live">00:00</b></span>
+        <span class="pill">Таймер: <b id="gameleft">—</b></span>
+        <span class="pill">2×2 осталось: <b id="left_22">—</b></span>
+        <span class="pill">2×2×2 осталось: <b id="left_222">—</b></span>
+        <span class="pill">3×3 осталось: <b id="left_33">—</b></span>
+        <span class="pill">3×3×3 осталось: <b id="left_333">—</b></span>
+      </div>
+      <div class="timerwrap" id="timerwrap" style="display:none">
+        <div class="timerbar"><i id="bar"></i></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">Серия: <b id="streak">0</b></div>
+        <div class="stat">Лучшая: <b id="best">0</b></div>
+        <div class="stat">Всего: <b id="total">0</b></div>
+        <div class="stat">Верных: <b id="correct">0</b></div>
+        <div class="stat">Точность: <b id="acc">0%</b></div>
+        <div class="stat nowrap">⌀ сек/зад: <b id="avg">0.0</b></div>
+        <div class="stat nowrap">Последнее: <b id="lastTime">—</b></div>
+      </div>
+
+      <div class="task mono" id="task">Нажми «Старт», чтобы начать.</div>
+
+      <div>
+        <label for="answer">Ответ</label>
+        <input id="answer" type="number" inputmode="decimal" placeholder="Введи ответ" />
+        <button class="btn primary block" id="check" title="Enter">Проверить</button>
+
+        <!-- широкие под проверкой: СЛЕДУЮЩАЯ → СТАРТ -->
+        <button class="btn block" id="next" title="Пробел">Следующая</button>
+        <button class="btn primary block" id="start">Старт</button>
+
+        <!-- управление сессией -->
+        <button class="btn block" id="pause">Пауза</button>
+        <button class="btn block" id="stop">Стоп</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <details id="work" open>
+        <summary>Показать/скрыть разбор для счёта в уме</summary>
+        <div id="explain" class="hint">Здесь будут подсказки по разложению и приёмам счёта.</div>
+      </details>
+
+      <div class="hint">Хоткеи: <b>Enter</b> — проверить, <b>Пробел</b> — следующая.</div>
+    </section>
+
+    <!-- LEFT: CONTROЛЫ -->
+    <section class="card panel">
+      <div class="controls">
+        <details open>
+          <summary>Аккаунт</summary>
+          <div class="controls" style="margin-top:6px">
+            <div class="rowmini">
+              <button class="btn small" id="gLogin">Войти через Google</button>
+              <button class="btn small" id="logout" style="display:none">Выйти</button>
+            </div>
+            <div class="rowmini">
+              <input id="email" type="text" placeholder="email@пример.com" style="max-width:210px">
+              <input id="pass" type="password" placeholder="пароль" style="max-width:150px">
+            </div>
+            <div class="rowmini">
+              <button class="btn small" id="emailLogin">Войти по email</button>
+              <button class="btn small" id="emailSignup">Регистрация</button>
+            </div>
+          </div>
+        </details>
+
+        <div class="toggle" role="group" aria-label="Режим">
+          <button class="btn" data-mode="add" id="mode-add">Сложение</button>
+          <button class="btn" data-mode="sub" id="mode-sub">Вычитание</button>
+          <button class="btn" data-mode="mul" id="mode-mul">Умножение</button>
+          <button class="btn" data-mode="div" id="mode-div">Деление</button>
+          <button class="btn" data-mode="mix" id="mode-mix">Смешанный</button>
+          <button class="btn" data-mode="custom" id="mode-custom">Своя задача</button>
+        </div>
+
+        <div id="custom-box" style="display:none">
+          <label>Своя задача</label>
+          <div class="rowmini">
+            <input id="c-a" type="number" placeholder="23" style="max-width:120px">
+            <select id="c-op1" style="max-width:110px">
+              <option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option>
+            </select>
+            <input id="c-b" type="number" placeholder="45" style="max-width:120px">
+            <select id="c-op2" style="max-width:110px">
+              <option value="none">—</option><option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option>
+            </select>
+            <input id="c-c" type="number" placeholder="55" style="max-width:120px">
+            <input id="c-result" type="number" inputmode="decimal" placeholder="Правильный ответ (опц.)" style="max-width:180px">
+            <button class="btn small" id="c-use">Сформировать</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="level">Уровень сложности</label>
+          <select id="level">
+            <option value="easy">Лёгкий — 2×2 и 2±2</option>
+            <option value="medium">Средний — 3×2 и 3±2</option>
+            <option value="hard">Сложный — 3×3 и тройное умножение</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Третье число (для умножения)</label>
+          <select id="third">
+            <option value="off">Выключено</option>
+            <option value="auto">Авто на сложном</option>
+            <option value="on">Всегда</option>
+          </select>
+          <div class="hint">Пример: 24 × 37 × 55 (2×2×2) или 123 × 456 × 789 (3×3×3).</div>
+        </div>
+
+        <div>
+          <label>Таймер игры (секунды)</label>
+          <div class="rowmini">
+            <input id="timelimit" type="number" min="0" step="5" value="0" placeholder="0 = без таймера" style="max-width:160px">
+            <label><input id="unlimited" type="checkbox"> Без лимита (марафон)</label>
+          </div>
+          <div class="rowmini">
+            <button class="btn small" id="minus30">−30 с</button>
+            <button class="btn small" id="plus30">+30 с</button>
+          </div>
+          <div class="hint">Кнопки ±30 с работают и во время активной сессии (динамически).</div>
+        </div>
+
+        <details open>
+          <summary>Уникальные базы и счётчики</summary>
+          <div class="controls" style="margin-top:6px">
+            <label><input type="checkbox" id="u22" checked> Использовать уникальную 2×2</label>
+            <label><input type="checkbox" id="u222"> Использовать уникальную 2×2×2</label>
+            <label><input type="checkbox" id="u33"> Использовать уникальную 3×3</label>
+            <label><input type="checkbox" id="u333"> Использовать уникальную 3×3×3</label>
+            <div class="hint">Осталось: 2×2 — <b id="left_22_s">—</b>, 2×2×2 — <b id="left_222_s">—</b>, 3×3 — <b id="left_33_s">—</b>, 3×3×3 — <b id="left_333_s">—</b>.</div>
+            <button class="btn small" id="resetBases">Сбросить все базы</button>
+          </div>
+        </details>
+
+        <details>
+          <summary>Утилиты</summary>
+          <div class="controls" style="margin-top:6px">
+            <button class="btn small" id="hint">Подсказка</button>
+            <button class="btn small" id="clear">Очистить поле</button>
+            <button class="btn small" id="exportCsv">Экспорт истории (CSV)</button>
+            <button class="btn small" id="clearHistory">Очистить историю</button>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <section class="card panel">
+    <h3 style="margin:0 0 10px">История сессии</h3>
+    <div class="hint">Локально (LocalStorage). При входе — синхронизация суммарных показателей в облаке.</div>
+    <div style="overflow:auto">
+      <table id="table">
+        <thead><tr><th>#</th><th>Выражение</th><th>Твой ответ</th><th>Правильный</th><th>Результат</th><th>Время (с)</th><th>Когда</th><th>Серия</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Firebase (для ЛК и синхронизации) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  // ===== Helpers =====
+  const $=s=>document.querySelector(s);
+  const nowISO=()=>new Date().toISOString();
+  const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const fmt=n=>Number(n).toFixed(1);
+  const clamp0=x=>Math.max(0,x);
+
+  // Theme
+  (function(){ const saved=localStorage.getItem('mm_theme'); if(saved==='light') document.body.classList.add('light');
+    $('#theme').addEventListener('click', ()=>{ document.body.classList.toggle('light'); localStorage.setItem('mm_theme', document.body.classList.contains('light')?'light':'dark'); }); })();
+
+  // ===== Levels / XP =====
+  const LVL_MAX=100;
+  const thresholds=Array.from({length:LVL_MAX},(_,i)=>Math.round(10000*Math.pow(i/(LVL_MAX-1),2)));
+  function rankFor(l){ if(l>=90)return{name:'Грандмастер',i:'G'}; if(l>=70)return{name:'Гений',i:'🧠'}; if(l>=50)return{name:'Профессор',i:'P'}; if(l>=30)return{name:'Математик',i:'M'}; if(l>=20)return{name:'Исследователь',i:'R'}; if(l>=10)return{name:'Учёный',i:'U'}; return{name:'Ученик',i:'E'}; }
+  function setAvatar(l,p){ const box=$('#avatar'); box.innerHTML=''; if(p?.photoURL){const img=document.createElement('img'); img.src=p.photoURL; box.appendChild(img);} else box.textContent=rankFor(l).i; $('#rank').textContent='• '+rankFor(l).name; }
+
+  // ===== Unique bases =====
+  const combRep=(n,k)=>{let a=1,b=1; for(let i=1;i<=k;i++){a*=n+k-i; b*=i} return Math.round(a/b);};
+  const N2=90, N3=900;
+  const totals={ p2: combRep(N2,2), t222: combRep(N2,3), p3: combRep(N3,2), t333: combRep(N3,3) };
+  const keys={ p2:'mm_b_22', t222:'mm_b_222', p3:'mm_b_33', t333:'mm_b_333' };
+  const loadSet=k=>new Set(JSON.parse(localStorage.getItem(k)||'[]'));
+  const saveSet=(k,s)=>localStorage.setItem(k, JSON.stringify(Array.from(s)));
+  const key2=(a,b)=>[a,b].sort((x,y)=>x-y).join('×');
+  const key3=(a,b,c)=>[a,b,c].sort((x,y)=>x-y).join('×');
+
+  // ===== State =====
+  const state={
+    running:false, paused:false,
+    mode:'mul', level:'easy', third:'auto',
+    expr:null, result:null, hint:'',
+    qStart:0, lastTime:null, nextTimer:null,
+
+    // LIVE timer
+    liveActive:false, liveAccum:0, liveRef:0, liveTick:null,
+
+    // Game timer
+    gameLimit:0, gameUnlimited:true, sessionTotal:0, sessionEnd:0, gameTick:null,
+
+    streak:0, best:Number(localStorage.getItem('bestStreak')||0), total:0, correct:0,
+    history: JSON.parse(localStorage.getItem('mm_history')||'[]'),
+    xp:Number(localStorage.getItem('mm_xp')||0), lvl:1, lastGain:0,
+
+    user:null, uid:null,
+    unique:{p2:true,t222:false,p3:false,t333:false},
+    used:{ p2:loadSet(keys.p2), t222:loadSet(keys.t222), p3:loadSet(keys.p3), t333:loadSet(keys.t333) }
+  };
+
+  // ===== LIVE timer =====
+  const liveFmt = ms => { const s=Math.floor(ms/1000); const mm=String(Math.floor(s/60)).padStart(2,'0'); const ss=String(s%60).padStart(2,'0'); return `${mm}:${ss}`; };
+  function setLiveActive(active){
+    if(active && !state.liveActive){ state.liveActive=true; state.liveRef=Date.now(); }
+    else if(!active && state.liveActive){ state.liveAccum += Date.now()-state.liveRef; state.liveActive=false; }
+  }
+  function startLiveTick(){
+    if(state.liveTick) clearInterval(state.liveTick);
+    state.liveTick=setInterval(()=>{
+      const ms = state.liveAccum + (state.liveActive ? (Date.now()-state.liveRef) : 0);
+      $('#live').textContent = liveFmt(ms);
+    }, 300);
+  }
+  function resetLive(){ state.liveActive=false; state.liveAccum=0; state.liveRef=0; $('#live').textContent='00:00'; }
+
+  // ===== Game timer =====
+  function renderTimer(left){
+    if(state.gameUnlimited){ $('#gameleft').textContent='∞'; $('#timerwrap').style.display='none'; return; }
+    $('#gameleft').textContent = Math.max(0, Math.ceil(left/1000)) + ' с';
+    $('#timerwrap').style.display='block';
+    const spent = Math.min(state.sessionTotal, Math.max(0, state.sessionTotal - left));
+    const pct = (spent / Math.max(1,state.sessionTotal)) * 100;
+    $('#bar').style.width = pct + '%';
+  }
+  function startGameTimer(){
+    stopGameTimer();
+    if(state.gameUnlimited || state.gameLimit<=0){ renderTimer(0); return; }
+    state.sessionTotal = state.gameLimit*1000;
+    state.sessionEnd   = Date.now() + state.sessionTotal;
+    state.gameTick = setInterval(()=>{
+      const left = Math.max(0, state.sessionEnd - Date.now());
+      renderTimer(left);
+      if(left<=0){ endSession(true); }
+    }, 200);
+  }
+  function stopGameTimer(){ if(state.gameTick){ clearInterval(state.gameTick); state.gameTick=null; } renderTimer(state.gameUnlimited?0:(state.sessionEnd-Date.now())); }
+  function adjustGameTime(deltaSec){
+    if(state.gameUnlimited){ // просто двигаем ввод
+      $('#timelimit').value = Math.max(0, Number($('#timelimit').value||0) + deltaSec);
+      return;
+    }
+    if(!state.running || state.paused) return;
+    const delta = deltaSec*1000;
+    state.sessionEnd += delta;
+    state.sessionTotal = Math.max(1000, state.sessionTotal + delta);
+  }
+
+  // ===== Level calc =====
+  function recalcLevel(){ let l=1; for(let i=0;i<thresholds.length;i++){ if(state.xp>=thresholds[i]) l=i+1; } state.lvl=Math.min(l,LVL_MAX); }
+  function updateLevelUI(){
+    recalcLevel();
+    const lvl=state.lvl, base=thresholds[lvl-1], next=thresholds[Math.min(lvl,LVL_MAX-1)];
+    const inLvl=Math.max(0,state.xp-base), span=Math.max(1,next-base);
+    $('#lvl').textContent=lvl; $('#xp').textContent=Math.floor(state.xp);
+    $('#inlevel').textContent=inLvl; $('#span').textContent=span;
+    $('#lvlbar').style.width=Math.min(100,Math.round(100*inLvl/span))+'%';
+    $('#xpgain').textContent = state.lastGain?`(${state.lastGain>0?'+':''}${state.lastGain.toFixed(2)} XP)`:'';
+    localStorage.setItem('mm_xp', String(Math.max(0,state.xp)));
+    if(state.user){ $('#helloUser').textContent = `• Привет, ${(state.user.displayName||state.user.email).split(' ')[0]}!`; }
+    else { $('#helloUser').textContent=''; }
+    setAvatar(lvl, state.user);
+  }
+
+  function updateLeft(){
+    const left22  = totals.p2   - state.used.p2.size;
+    const left222 = totals.t222 - state.used.t222.size;
+    const left33  = totals.p3   - state.used.p3.size;
+    const left333 = totals.t333 - state.used.t333.size;
+    $('#left_22').textContent=left22;  $('#left_22_s').textContent=left22;
+    $('#left_222').textContent=left222;$('#left_222_s').textContent=left222;
+    $('#left_33').textContent=left33;  $('#left_33_s').textContent=left33;
+    $('#left_333').textContent=left333;$('#left_333_s').textContent=left333;
+  }
+  function resetAllBases(){
+    Object.values(keys).forEach(k=>localStorage.removeItem(k));
+    state.used={ p2:new Set(), t222:new Set(), p3:new Set(), t333:new Set() };
+    updateLeft(); cloudQueueSave();
+  }
+
+  // ===== Pickers =====
+  function pickPair(digits, baseId){
+    const lo = digits===2?10:100, hi = digits===2?99:999;
+    const used = state.used[baseId], total = totals[baseId];
+    if (state.unique[baseId] && used.size>=total) return null;
+    while(true){
+      const a=rand(lo,hi), b=rand(lo,hi); const k=key2(a,b);
+      if (!state.unique[baseId] || !used.has(k)){
+        if (state.unique[baseId]){ used.add(k); saveSet(keys[baseId], used); updateLeft(); cloudQueueSave(); }
+        return [a,b];
+      }
+    }
+  }
+  function pickTriple(digits, baseId){
+    const lo = digits===2?10:100, hi = digits===2?99:999;
+    const used = state.used[baseId], total = totals[baseId];
+    if (state.unique[baseId] && used.size>=total) return null;
+    while(true){
+      const a=rand(lo,hi), b=rand(lo,hi), c=rand(lo,hi); const k=key3(a,b,c);
+      if (!state.unique[baseId] || !used.has(k)){
+        if (state.unique[baseId]){ used.add(k); saveSet(keys[baseId], used); updateLeft(); cloudQueueSave(); }
+        return [a,b,c];
+      }
+    }
+  }
+
+  // ===== Generators =====
+  function makeAdd(level){
+    let a,b; if(level==='easy'){a=rand(10,99); b=rand(10,99);}
+    else if(level==='medium'){a=rand(100,999); b=rand(10,99);} else {a=rand(100,999); b=rand(100,999);}
+    return {expr:`${a} + ${b}`, result:a+b, hint:`Разложи на десятки/единицы.`};
+  }
+  function makeSub(level){
+    let a,b; if(level==='easy'){a=rand(10,99); b=rand(10,99);}
+    else if(level==='medium'){a=rand(100,999); b=rand(10,99);} else {a=rand(100,999); b=rand(100,999);}
+    if(b>a)[a,b]=[b,a];
+    return {expr:`${a} − ${b}`, result:a-b, hint:`Сначала десятки, затем единицы.`};
+  }
+  function mulHint2(a,b){
+    const a1=Math.floor(a/10), a2=a%10, b1=Math.floor(b/10), b2=b%10;
+    return `${a} × ${b} = (${a1}0 + ${a2}) × (${b1}0 + ${b2}).`;
+  }
+  function makeMul(level, third){
+    let expr, result, hint;
+    if (level==='easy'){
+      if (third==='on'){
+        const t=pickTriple(2,'t222'); if(!t){alert('База 2×2×2 исчерпана'); return null;}
+        const [a,b,c]=t; expr=`${a} × ${b} × ${c}`; result=a*b*c; hint=mulHint2(a,b)+` Перемножь пару и домножь на ${c}.`;
+      } else {
+        const p=pickPair(2,'p2'); if(!p){alert('База 2×2 исчерпана'); return null;}
+        const [a,b]=p; expr=`${a} × ${b}`; result=a*b; hint=mulHint2(a,b);
+      }
+    } else if (level==='hard'){
+      const needThird=(third==='on'||third==='auto');
+      if(needThird){
+        const t=pickTriple(3,'t333'); if(!t){alert('База 3×3×3 исчерпана'); return null;}
+        const [a,b,c]=t; expr=`${a} × ${b} × ${c}`; result=a*b*c; hint=mulHint2(a,b)+` Затем × ${c}.`;
+      } else {
+        const p=pickPair(3,'p3'); if(!p){alert('База 3×3 исчерпана'); return null;}
+        const [a,b]=p; expr=`${a} × ${b}`; result=a*b; hint=mulHint2(a,b);
+      }
+    } else {
+      const a=rand(100,999), b=rand(10,99);
+      expr=`${a} × ${b}`; result=a*b; hint=mulHint2(a,b);
+    }
+    return {expr,result,hint};
+  }
+  function makeDiv(level){
+    let d,q; if(level==='easy'){d=rand(2,9); q=rand(10,99);}
+    else if(level==='medium'){d=rand(10,99); q=rand(10,99);} else {d=rand(10,99); q=rand(100,999);}
+    const n=d*q; return {expr:`${n} ÷ ${d}`, result:q, hint:`Подели по разрядам.`};
+  }
+  function makeMixed(level, third){
+    const pool=['add','sub','mul','div']; const op=pool[Math.floor(Math.random()*pool.length)];
+    if(op==='add') return makeAdd(level);
+    if(op==='sub') return makeSub(level);
+    if(op==='mul') return makeMul(level, third);
+    return makeDiv(level);
+  }
+  function makeCustom(){
+    const a=Number($('#c-a').value), b=Number($('#c-b').value);
+    const c=$('#c-op2').value==='none'?null:Number($('#c-c').value);
+    const op1=$('#c-op1').value, op2=$('#c-op2').value;
+    if(!Number.isFinite(a)||!Number.isFinite(b)||(op2!=='none'&&!Number.isFinite(c))){alert('Заполни числа'); return null;}
+    const s=o=>o==='*'?'×':o==='/'?'÷':o==='-'?'−':'+';
+    const f=(x,o,y)=>o==='*'?x*y:o==='/'?x/y:o==='-'?x-y:x+y;
+    const expr=`${a} ${s(op1)} ${b}`+(op2==='none'?'':` ${s(op2)} ${c}`);
+    const manual=$('#c-result').value.trim();
+    const result=manual!==''&&Number.isFinite(Number(manual))?Number(manual):(op2==='none'?f(a,op1,b):f(f(a,op1,b),op2,c));
+    return {expr,result,hint:'Решай слева направо (как задано).'};
+  }
+
+  // ===== Session control =====
+  function start(){
+    state.streak=0; state.total=0; state.correct=0; updateStats();
+    state.gameLimit    = Number($('#timelimit').value)||0;
+    state.gameUnlimited= $('#unlimited').checked || state.gameLimit===0;
+    state.paused=false; $('#pause').textContent='Пауза';
+    setRunning(true);
+    startGameTimer();
+    newTask();
+  }
+  function setRunning(r){
+    state.running=r;
+    if(r){ resetLive(); startLiveTick(); }
+    else { setLiveActive(false); }
+  }
+  function pauseResume(){
+    if(!state.running) return;
+    state.paused=!state.paused;
+    if(state.paused){
+      setLiveActive(false);
+      if(state.gameTick){ clearInterval(state.gameTick); state.gameTick=null; }
+      $('#pause').textContent='Продолжить';
+      $('#feedback').textContent='Пауза';
+    }else{
+      if(!state.gameUnlimited){
+        state.sessionEnd = Date.now() + Math.max(0, state.sessionEnd - Date.now());
+        startGameTimer();
+      }
+      $('#pause').textContent='Пауза';
+      $('#feedback').textContent='';
+      setLiveActive(true);
+    }
+  }
+  function endSession(timeout=false){
+    setRunning(false);
+    stopGameTimer();
+    $('#feedback').textContent = timeout ? 'Время вышло! Сессия завершена.' : 'Сессия завершена.';
+    $('#feedback').className = timeout ? 'feedback bad' : 'feedback';
+  }
+
+  function newTask(){
+    if(!state.running){ $('#feedback').textContent='Нажми «Старт», чтобы начать.'; $('#feedback').className='feedback'; return; }
+    if(state.paused){ pauseResume(); }
+    let pack;
+    if(state.mode==='add') pack=makeAdd(state.level);
+    else if(state.mode==='sub') pack=makeSub(state.level);
+    else if(state.mode==='mul') pack=makeMul(state.level, state.third);
+    else if(state.mode==='div') pack=makeDiv(state.level);
+    else if(state.mode==='mix') pack=makeMixed(state.level, state.third);
+    else pack=makeCustom();
+    if(!pack) return;
+    state.expr=pack.expr; state.result=pack.result; state.hint=pack.hint;
+    $('#task').textContent=pack.expr; $('#explain').textContent=pack.hint;
+    $('#answer').value=''; $('#feedback').textContent=''; $('#xpgain').textContent='';
+    if(state.nextTimer){ clearTimeout(state.nextTimer); state.nextTimer=null; }
+    $('#answer').focus();
+    state.qStart=performance.now();
+    setLiveActive(true);
+  }
+
+  // ===== Stats / History =====
+  function updateStats(){
+    $('#streak').textContent=state.streak; $('#best').textContent=state.best;
+    $('#total').textContent=state.total; $('#correct').textContent=state.correct;
+    const acc=state.total?Math.round(100*state.correct/state.total):0; $('#acc').textContent=acc+'%';
+    const avg=state.history.length?(state.history.reduce((s,h)=>s+h.time,0)/state.history.length):0;
+    $('#avg').textContent=fmt(avg/1000); $('#lastTime').textContent=state.lastTime!=null?fmt(state.lastTime/1000):'—';
+  }
+  function pushHistory(entry){
+    state.history.push(entry); localStorage.setItem('mm_history', JSON.stringify(state.history));
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${state.history.length}</td><td class="mono">${entry.expr}</td><td>${entry.given}</td><td>${entry.correctVal}</td><td>${entry.ok?'✓':'✗'}</td><td>${fmt(entry.time/1000)}</td><td class="nowrap">${entry.ts}</td><td>${entry.streak}</td>`;
+    $('#table tbody').appendChild(tr);
+  }
+  function rebuildTable(){
+    const tbody=$('#table tbody'); tbody.innerHTML='';
+    state.history.forEach((h,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${i+1}</td><td class="mono">${h.expr}</td><td>${h.given}</td><td>${h.correctVal}</td><td>${h.ok?'✓':'✗'}</td><td>${fmt(h.time/1000)}</td><td class="nowrap">${h.ts}</td><td>${h.streak}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ===== Check =====
+  function check(){
+    if(!state.running){ $('#feedback').textContent='Сессия не запущена.'; $('#feedback').className='feedback bad'; return; }
+    if(state.result==null){ $('#feedback').textContent='Сначала сформируй задачу («Следующая»).'; $('#feedback').className='feedback bad'; return; }
+    const raw=$('#answer').value.trim(); if(raw===''){ $('#feedback').textContent='Поле «Ответ» пустое.'; $('#feedback').className='feedback bad'; return; }
+    const val=Number(raw); if(!Number.isFinite(val)){ $('#feedback').textContent='Введи число.'; $('#feedback').className='feedback bad'; return; }
+
+    const qTime=performance.now()-state.qStart; state.lastTime=qTime; state.total++;
+    setLiveActive(false);
+
+    const ok=(val===state.result);
+    if(ok){
+      state.correct++; state.streak++; state.best=Math.max(state.best,state.streak); localStorage.setItem('bestStreak',String(state.best));
+      $('#feedback').textContent='Верно!'; $('#feedback').className='feedback good';
+      const gain=1*(1+0.01*state.streak); state.xp=clamp0(state.xp+gain); state.lastGain=gain; updateLevelUI();
+      if(state.nextTimer) clearTimeout(state.nextTimer);
+      state.nextTimer=setTimeout(()=>{ newTask(); }, 1000);
+    } else {
+      state.streak=0; $('#feedback').textContent=`Неверно. Правильный: ${state.result}`; $('#feedback').className='feedback bad';
+      state.xp=clamp0(state.xp-2); state.lastGain=-2; updateLevelUI();
+    }
+    pushHistory({expr:state.expr,given:val,correctVal:state.result,ok,time:qTime,ts:nowISO(),streak:state.streak});
+    updateStats(); cloudQueueSave();
+  }
+
+  // ===== Events =====
+  document.querySelectorAll('[data-mode]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('[data-mode]').forEach(b=>b.classList.remove('primary'));
+      btn.classList.add('primary'); state.mode=btn.dataset.mode;
+      $('#custom-box').style.display=(state.mode==='custom')?'block':'none';
+    });
+  });
+  $('#level').addEventListener('change',e=>state.level=e.target.value);
+  $('#third').addEventListener('change',e=>state.third=e.target.value);
+
+  ['u22','u222','u33','u333'].forEach(id=>{
+    $('#'+id).addEventListener('change',()=>{
+      state.unique.p2=$('#u22').checked; state.unique.t222=$('#u222').checked;
+      state.unique.p3=$('#u33').checked; state.unique.t333=$('#u333').checked;
+    });
+  });
+  $('#resetBases').addEventListener('click', ()=>{ if(confirm('Сбросить все уникальные базы?')) resetAllBases(); });
+
+  $('#c-use').addEventListener('click', ()=>{ if(!state.running) start(); newTask(); });
+  $('#start').addEventListener('click', start);
+  $('#next').addEventListener('click', ()=> newTask());
+  $('#check').addEventListener('click', check);
+  $('#pause').addEventListener('click', pauseResume);
+  $('#stop').addEventListener('click', ()=> endSession(false));
+  $('#clear').addEventListener('click', ()=> $('#answer').value='');
+  $('#hint').addEventListener('click', ()=> $('#work').open=true);
+
+  $('#minus30').addEventListener('click', ()=> adjustGameTime(-30));
+  $('#plus30').addEventListener('click', ()=> adjustGameTime(+30));
+
+  // Hotkeys: Enter = check, Space = next
+  $('#answer').addEventListener('keydown', e=>{
+    if(!state.running) return;
+    if(e.key==='Enter'){ e.preventDefault(); check(); return; }
+    if(e.code==='Space'||e.key===' '){ e.preventDefault(); newTask(); }
+  });
+  document.addEventListener('keydown', e=>{
+    if(!state.running) return;
+    if(e.code==='Space'||e.key===' '){ e.preventDefault(); newTask(); }
+  });
+
+  // Export / history
+  function toCSV(rows){ return rows.map(r=>[r.expr,r.given,r.correctVal,r.ok?'ok':'wrong',fmt(r.time/1000),r.ts,r.streak].join(',')).join('\n'); }
+  $('#exportCsv').addEventListener('click', ()=>{
+    const csv='expr,given,correct,result,time_s,ts,streak\n'+toCSV(state.history);
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download='history.csv'; a.click(); URL.revokeObjectURL(url);
+  });
+  $('#clearHistory').addEventListener('click', ()=>{ if(confirm('Очистить историю?')){ state.history=[]; localStorage.removeItem('mm_history'); rebuildTable(); updateStats(); cloudQueueSave(); }});
+
+  // ===== Firebase: вход и синхронизация =====
+  const firebaseConfig = { // вставь свой конфиг, иначе облако будет выключено
+    apiKey: "YOUR_API_KEY_HERE",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    appId: "YOUR_APP_ID"
+  };
+  const cloud = { enabled:false, app:null, auth:null, db:null, saveTimer:null };
+  try{
+    if(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('YOUR_')){
+      cloud.app=firebase.initializeApp(firebaseConfig);
+      cloud.auth=firebase.auth();
+      cloud.db=firebase.firestore();
+      cloud.enabled=true;
+    }
+  }catch(e){ cloud.enabled=false; }
+
+  function cloudMergeFrom(doc){
+    if(!doc) return;
+    const d=doc.data();
+    state.xp = Math.max(state.xp, d?.xp||0);
+    state.best = Math.max(state.best, d?.best||0);
+    if(Array.isArray(d?.used22)){ const s=state.used.p2; d.used22.forEach(k=>s.add(k)); saveSet(keys.p2,s); }
+    if(Number.isFinite(d?.used222Count)) state.used.t222.size = Math.max(state.used.t222.size, d.used222Count);
+    if(Number.isFinite(d?.used33Count))  state.used.p3.size   = Math.max(state.used.p3.size, d.used33Count);
+    if(Number.isFinite(d?.used333Count)) state.used.t333.size = Math.max(state.used.t333.size, d.used333Count);
+    updateLeft(); updateLevelUI();
+  }
+  async function cloudLoad(){ if(!cloud.enabled || !state.uid) return; const ref=cloud.db.collection('users').doc(state.uid); const snap=await ref.get(); if(snap.exists) cloudMergeFrom(snap); }
+  async function cloudSave(){
+    if(!cloud.enabled || !state.uid) return;
+    const ref=cloud.db.collection('users').doc(state.uid);
+    const payload={ uid:state.uid, xp:Math.floor(state.xp), best:state.best,
+      used22:Array.from(state.used.p2).slice(-5000),
+      used222Count:state.used.t222.size, used33Count:state.used.p3.size, used333Count:state.used.t333.size,
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp() };
+    await ref.set(payload,{merge:true});
+  }
+  function cloudQueueSave(){ if(!cloud.enabled || !state.uid) return; if(cloud.saveTimer) clearTimeout(cloud.saveTimer); cloud.saveTimer=setTimeout(cloudSave,1500); }
+
+  async function doGoogle(){ if(!cloud.enabled){ alert('Облако не настроено.'); return; } const provider=new firebase.auth.GoogleAuthProvider(); await cloud.auth.signInWithPopup(provider); }
+  async function doEmailLogin(){ if(!cloud.enabled){ alert('Облако не настроено.'); return; } await cloud.auth.signInWithEmailAndPassword($('#email').value.trim(),$('#pass').value); }
+  async function doEmailSignup(){ if(!cloud.enabled){ alert('Облако не настроено.'); return; } await cloud.auth.createUserWithEmailAndPassword($('#email').value.trim(),$('#pass').value); }
+  async function doLogout(){ if(cloud.enabled) await cloud.auth.signOut(); }
+
+  $('#gLogin').addEventListener('click', doGoogle);
+  $('#emailLogin').addEventListener('click', doEmailLogin);
+  $('#emailSignup').addEventListener('click', doEmailSignup);
+  $('#logout').addEventListener('click', doLogout);
+
+  if(cloud.enabled){
+    firebase.auth().onAuthStateChanged(async (user)=>{
+      state.user=user||null; state.uid=user?.uid||null;
+      $('#logout').style.display = user?'inline-block':'none';
+      updateLevelUI();
+      if(user){ await cloudLoad(); }
+    });
+  }
+
+  // ===== Init =====
+  (function init(){
+    document.getElementById('mode-mul').classList.add('primary');
+    rebuildTable(); updateStats(); updateLeft(); updateLevelUI();
+    $('#live').textContent='00:00'; $('#gameleft').textContent='—'; $('#timerwrap').style.display='none';
+  })();
+</script>
+</body>
+</html>

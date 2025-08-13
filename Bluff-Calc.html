@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EV Bluff Calculator</title>
+<style>
+  :root{
+    --bg:#0b0f13; --text:#e7eaf0; --muted:#98a2b3;
+    --panel:#121820; --row:#1a222c; --row2:#222b36;
+    --head:#0e3657; --accent:#1f6fb2; --green:#34d399; --red:#ef4444; --border:#263241;
+  }
+  html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  header{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:12px}
+  h1{margin:0;font-size:22px}
+  .controls{display:flex;align-items:center;gap:12px;background:var(--panel);padding:10px 12px;border:1px solid var(--border);border-radius:10px}
+  select, input[type="number"]{background:#0f141b;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+  .btn{appearance:none;cursor:pointer;background:#182130;color:#fff;border:1px solid var(--border);padding:8px 12px;border-radius:8px}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.danger{background:#29181a;border-color:#3b2426}
+  .note{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:separate;border-spacing:0 10px}
+  thead th{background:var(--head);padding:14px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);text-transform:uppercase;font-size:13px;letter-spacing:.03em}
+  tbody tr{background:var(--row);border:1px solid var(--border)}
+  tbody tr:nth-child(even){background:var(--row2)}
+  td{padding:10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  td:first-child, thead th:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}
+  td:last-child, thead th:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px}
+  td.center{text-align:center}
+  .in{width:100%;text-align:center;border:1px solid var(--border);background:#0f141b;color:var(--text);border-radius:8px;padding:8px}
+  .kpi-green{color:var(--green);font-weight:700}
+  .kpi-red{color:var(--red);font-weight:700}
+  .footer{margin-top:18px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>EV Bluff Calculator</h1>
+    <div class="controls">
+      <label for="bbCost">Стоимость 1 bb (фишек):</label>
+      <select id="bbCost">
+        <option>20</option><option>30</option><option selected>40</option><option>60</option>
+        <option>80</option><option>100</option><option>120</option><option>150</option>
+      </select>
+      <button class="btn" id="addRow">Добавить строку</button>
+      <button class="btn danger" id="clearRows">Очистить</button>
+    </div>
+  </header>
+
+  <div class="note">Формулы: Zero‑EV Fold % = Bet / (Pot + Bet) × 100. EV(BB) = Fold% × Pot − (1 − Fold%) × Bet. EV(фишек) = EV(BB) × стоимость bb.</div>
+
+  <table id="tbl">
+    <thead>
+      <tr>
+        <th>BET (BB)</th>
+        <th>POT (BB)</th>
+        <th>FOLD на сайз (%)</th>
+        <th>ZERO‑EV FOLD (%)</th>
+        <th>EV (BB)</th>
+        <th>EV (фишки)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- стартовые строки как в примере -->
+    </tbody>
+  </table>
+
+  <div class="footer">Нравится? Держи под рукой и другие полезные инструменты на <a href="https://gptonline.ai/" target="_blank" rel="noreferrer">gptonline.ai</a></div>
+</div>
+
+<script>
+(function(){
+  const $ = (s,root=document)=>root.querySelector(s);
+  const tbody = $('#tbl tbody');
+  const bbCostEl = $('#bbCost');
+  const ru = 'ru-RU';
+
+  function fmt(n, d=2){
+    if (!isFinite(n)) return '—';
+    return Number(n.toFixed(d)).toLocaleString(ru);
+  }
+
+  // расчёт по строке
+  function recalcRow(tr){
+    const bet = parseFloat($('.bet',tr).value) || 0;
+    const pot = parseFloat($('.pot',tr).value) || 0;
+    let foldPct = parseFloat($('.fold',tr).value);
+    if (!isFinite(foldPct)) foldPct = 0;
+    const fold = foldPct/100;
+
+    const zeroFold = (pot+bet)>0 ? bet/(pot+bet)*100 : NaN;
+    const evBB = (fold*pot) - ((1-fold)*bet);
+    const evChips = evBB * (parseFloat(bbCostEl.value)||0);
+
+    $('.zero',tr).textContent = fmt(zeroFold,2);
+    const evCell = $('.evbb',tr);
+    evCell.textContent = fmt(evBB,2);
+    evCell.className = 'evbb ' + (evBB>=0 ? 'kpi-green' : 'kpi-red');
+    const chipCell = $('.evchips',tr);
+    chipCell.textContent = fmt(evChips,2);
+    chipCell.className = 'evchips ' + (evBB>=0 ? 'kpi-green' : 'kpi-red');
+  }
+
+  function attachRowHandlers(tr){
+    ['input','change'].forEach(evt=>{
+      tr.addEventListener(evt, e=>{
+        if (e.target.classList.contains('bet') ||
+            e.target.classList.contains('pot') ||
+            e.target.classList.contains('fold')) {
+          recalcRow(tr);
+        }
+      });
+    });
+    $('.del',tr).addEventListener('click', ()=>{ tr.remove(); });
+  }
+
+  function makeRow({bet=0,pot=0,fold=0}={}){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="center"><input class="in bet" type="number" step="0.5" value="${bet}"></td>
+      <td class="center"><input class="in pot" type="number" step="0.5" value="${pot}"></td>
+      <td class="center"><input class="in fold" type="number" step="1" value="${fold}"></td>
+      <td class="center zero">—</td>
+      <td class="center evbb">—</td>
+      <td class="center evchips">—</td>
+      <td class="center"><button class="btn danger del">×</button></td>
+    `;
+    attachRowHandlers(tr);
+    tbody.appendChild(tr);
+    recalcRow(tr);
+  }
+
+  // стартовые данные (как на скрине)
+  [
+    {bet:12,pot:6,fold:90},
+    {bet:4,pot:4,fold:50},
+    {bet:4,pot:4,fold:63},
+    {bet:6,pot:4,fold:67},
+    {bet:9,pot:4,fold:80},
+  ].forEach(makeRow);
+
+  // глобальные обработчики
+  $('#addRow').addEventListener('click', ()=> makeRow({bet:4,pot:4,fold:50}));
+  $('#clearRows').addEventListener('click', ()=>{
+    tbody.innerHTML='';
+    makeRow({});
+  });
+  bbCostEl.addEventListener('change', ()=>{
+    [...tbody.querySelectorAll('tr')].forEach(recalcRow);
+  });
+
+  // подсказка: Enter/Tab работают в инпутах; пересчёт делается сразу
+})();
+</script>
+</body>
+</html>

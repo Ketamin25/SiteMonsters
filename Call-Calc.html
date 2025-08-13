@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nitro EV Call Calculator</title>
+<style>
+  :root{
+    --bg:#0a0a0c; --panel:#111114; --panel2:#0f0f12; --text:#f3f5f7; --muted:#9aa4b2;
+    --red:#e4002b; --red2:#ff234b; --green:#34d399; --border:#1f2532; --row:#131823; --row2:#182033;
+  }
+  html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%,#09090b 100%);color:var(--text);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto}
+  .wrap{max-width:1200px;margin:0 auto;padding:22px}
+  header{display:flex;align-items:end;justify-content:space-between;margin-bottom:10px}
+  h1{margin:0;font-size:24px;font-weight:900;letter-spacing:.3px}
+  .controls{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--border);padding:10px 12px;border-radius:14px}
+  label{font-size:13px;color:var(--muted)}
+  select{appearance:none;background:#0d1220;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:10px 36px 10px 12px}
+  .btn{appearance:none;cursor:pointer;background:#171822;color:#fff;border:1px solid var(--border);padding:10px 12px;border-radius:10px}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.danger{background:#311317;border-color:#4a1d24}
+  .note{color:var(--muted);font-size:13px;margin:10px 2px}
+
+  .table-wrap{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,var(--panel),var(--panel2))}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  thead th{position:sticky;top:0;background:linear-gradient(180deg,#21131a,#1a0f14);color:#f7f7f7;padding:14px 10px;border-bottom:1px solid var(--border);
+           text-transform:uppercase;font-size:12px;letter-spacing:.08em}
+  thead th:first-child{border-left:3px solid var(--red)}
+  tbody tr:nth-child(odd){background:var(--row)}
+  tbody tr:nth-child(even){background:var(--row2)}
+  td{padding:10px;border-bottom:1px solid var(--border);text-align:center}
+  td:first-child{border-left:3px solid transparent}
+  .in{width:100%;max-width:120px;text-align:center;border:1px solid var(--border);background:#0e1324;color:var(--text);border-radius:10px;padding:10px;outline:none}
+  .in:focus{border-color:#364a7a;box-shadow:0 0 0 3px rgba(228,0,43,.18)}
+  .kpi{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700}
+  .pos{color:var(--green);background:rgba(52,211,153,.12)}
+  .neg{color:#ff8d8d;background:rgba(255,59,59,.12)}
+  .trash{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:#23161b;color:#ff9ba3;font-size:18px;line-height:1}
+  .footer{margin-top:14px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Nitro EV Call Calculator</h1>
+    <div class="controls">
+      <div>
+        <label for="bbCost">Стоимость 1 bb (фишек)</label><br>
+        <select id="bbCost">
+          <option>20</option><option>30</option><option selected>40</option><option>60</option>
+          <option>80</option><option>100</option><option>120</option><option>150</option>
+        </select>
+      </div>
+      <button class="btn" id="addRow">Добавить строку</button>
+      <button class="btn danger" id="clearRows">Очистить</button>
+    </div>
+  </header>
+
+  <div class="note">
+    Формулы (Call = Bet): <b>Zero‑EV CALL</b> = Bet / (Pot + Bet + Call); <b>EV(BB)</b> = Bluffs% × (Pot + Bet) − (1 − Bluffs%) × Call; <b>EV(фишки)</b> = EV(BB) × цена bb.
+    Здесь <i>Bluffs%</i> — доля блефов в диапазоне ставки оппонента (принимаем, что против блефов выигрываем 100%, против вэлью — 0%).
+  </div>
+
+  <div class="table-wrap">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>BET (BB)</th>
+          <th>POT (BB)</th>
+          <th>BLUFFS (%)</th>
+          <th>ZERO‑EV CALL (%)</th>
+          <th>EV (BB)</th>
+          <th>EV (ФИШКИ)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Хочешь объединить с тренажёром и хранить историю? Легко расширим. А пока держи это и другие утилиты на <a href="https://gptonline.ai/" target="_blank" rel="noreferrer">gptonline.ai</a>
+  </div>
+</div>
+
+<script>
+(() => {
+  const $ = (s,root=document)=>root.querySelector(s);
+  const tbody = $('#tbl tbody');
+  const bbCostEl = $('#bbCost');
+  const RU = 'ru-RU';
+
+  function fmt(n, d=2){
+    if (!isFinite(n)) return '—';
+    return Number(n.toFixed(d)).toLocaleString(RU);
+  }
+
+  // --- расчёт строки ---
+  function recalcRow(tr){
+    const bet = parseFloat($('.bet',tr).value) || 0;
+    const pot = parseFloat($('.pot',tr).value) || 0;
+    let blfPct = parseFloat($('.blf',tr).value);
+    if (!isFinite(blfPct)) blfPct = 0;
+    const e = Math.max(0, Math.min(1, blfPct/100)); // equity ~= доля блефов
+    const call = bet; // по умолчанию
+
+    // Zero‑EV CALL (в %)
+    const zero = (pot+bet+call)>0 ? (call/(pot+bet+call)*100) : NaN;
+
+    // EV(BB) = e*(Pot+Bet) − (1−e)*Call
+    const evBB = e*(pot+bet) - (1-e)*call;
+    const evChips = evBB * (parseFloat(bbCostEl.value)||0);
+
+    $('.zero',tr).textContent = fmt(zero,2);
+
+    const evCell = $('.evbb',tr);
+    evCell.innerHTML = `<span class="kpi ${evBB>=0?'pos':'neg'}">${fmt(evBB,2)}</span>`;
+
+    const chipCell = $('.evchips',tr);
+    chipCell.innerHTML = `<span class="kpi ${evBB>=0?'pos':'neg'}">${fmt(evChips,2)}</span>`;
+  }
+
+  function attachRowHandlers(tr){
+    tr.addEventListener('input', e=>{
+      if (e.target.matches('.bet,.pot,.blf')) recalcRow(tr);
+    });
+    $('.del',tr).addEventListener('click', ()=> tr.remove());
+  }
+
+  function makeRow({bet=12,pot=6,blf=40}={}){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input class="in bet" type="number" step="0.5" value="${bet}"></td>
+      <td><input class="in pot" type="number" step="0.5" value="${pot}"></td>
+      <td><input class="in blf" type="number" step="1"   value="${blf}"></td>
+      <td class="zero">—</td>
+      <td class="evbb">—</td>
+      <td class="evchips">—</td>
+      <td><button class="trash del">×</button></td>
+    `;
+    attachRowHandlers(tr);
+    tbody.appendChild(tr);
+    recalcRow(tr);
+  }
+
+  // стартовые строки (можешь править)
+  [
+    {bet:12,pot:6,blf:40},
+    {bet:4,pot:4,blf:50},
+    {bet:6,pot:4,blf:67},
+    {bet:9,pot:4,blf:80}
+  ].forEach(makeRow);
+
+  // глобальные контролы
+  $('#addRow').addEventListener('click', ()=> makeRow({bet:4,pot:4,blf:50}));
+  $('#clearRows').addEventListener('click', ()=>{ tbody.innerHTML=''; makeRow({}); });
+  bbCostEl.addEventListener('change', ()=>{ [...tbody.querySelectorAll('tr')].forEach(recalcRow); });
+})();
+</script>
+</body>
+</html>
