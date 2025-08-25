@@ -1,9 +1,10 @@
-// --- УКАЖИ ИМЕНА ТВОИХ ФАЙЛОВ ---
+// ------------ ВКЛАДКИ (файлы в корне репозитория) ------------
 const TOOLS = [
-  { id:'bluff-calc',    title:'Bluff Calc',    url:'./Bluff-Calc.html' },
-  { id:'call-calc',     title:'Call Calc',     url:'./Call-Calc.html' },
-  { id:'bluff-trainer', title:'Bluff Trainer', url:'./Bluff-Trainer.html' },
-  { id:'math-trainer',  title:'Math Trainer',  url:'./Math-Trainer.html' },
+  { id:'bluff-calc',    title:'Bluff Calc',          url:'./Bluff-Calc.html' },
+  { id:'call-calc',     title:'Call Calc',           url:'./Call-Calc.html' },
+  { id:'bluff-trainer', title:'Bluff Trainer',       url:'./Bluff-Trainer.html' },
+  { id:'math-trainer',  title:'Math Trainer',        url:'./Math-Trainer.html' },
+  { id:'heavy-percent', title:'Сложный процент',     url:'./Heavy-percent.html' }, // ← новинка
 ];
 
 const tabsBox = document.getElementById('tabs');
@@ -26,7 +27,7 @@ function setActive(id){
 }
 function navigate(id){
   const tool = TOOLS.find(x=>x.id===id) || TOOLS[0];
-  frame.src = tool.url;
+  frame.src = tool.url;              // грузим в iframe → весь JS внутри страницы работает
   setActive(tool.id);
   location.hash = `#/${tool.id}`;
 }
@@ -35,23 +36,15 @@ function readRoute(){
   navigate(m?m[1]:TOOLS[0].id);
 }
 
-/* ---------- Firebase: Google Sign-In ---------- */
+// ------------------------- Firebase Google Sign‑In -------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-// ТВОЙ РЕАЛЬНЫЙ КОНФИГ
-const firebaseConfig = {
-  apiKey: "AIzaSyAJ3UzHfCBJMeTqcrxMrqYUlEADJpx_Sh0",
-  authDomain: "nitromonsters-1dba4.firebaseapp.com",
-  projectId: "nitromonsters-1dba4",
-  storageBucket: "nitromonsters-1dba4.firebasestorage.app",
-  messagingSenderId: "1084195004228",
-  appId: "1:1084195004228:web:00360cfa707cc4df4a4111",
-  measurementId: "G-3PJ4J2J259"
-};
+// Конфиг берём из отдельного файла (лежит рядом)
+import { firebaseConfig } from "./firebase-config.js";
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app); auth.useDeviceLanguage();
@@ -64,8 +57,8 @@ const userBox   = document.getElementById('userBox');
 loginBtn.onclick = async ()=>{
   try{
     await signInWithPopup(auth, prov);
-  }catch(e){
-    await signInWithRedirect(auth, prov);
+  }catch{
+    await signInWithRedirect(auth, prov); // iOS/Safari фолбэк
   }
 };
 getRedirectResult(auth).catch(()=>{});
