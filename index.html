@@ -1,30 +1,27 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Nitro Poker Tools</title>
-<style>
-  :root{--bg:#0b0e13;--panel:#0f1420;--text:#e8edf6;--muted:#9aa7b6;--border:#213047;--accent:#3ea0ff;--accent2:#1b66ff;--danger:#ff4d4d}
-  html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.5 system-ui}
-  .wrap{max-width:1200px;margin:0 auto;padding:12px}
-  .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:8px 10px;position:sticky;top:8px;z-index:5}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#1a2741;color:#fff;font-weight:600;cursor:pointer}
-  .tab:hover{filter:brightness(1.08)}
-  .tab.active{background:var(--accent);border-color:#2c79bf;color:#051422}
-  .right{display:flex;gap:8px;align-items:center;color:var(--muted)}
-  .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#223455;color:#fff;cursor:pointer}
-  .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));border:none}
-  .btn.danger{background:#4a1f24;border-color:#6b2a32;color:#ffb3b3}
-  #userBox{min-width:140px;text-align:right}
-  #stage{margin-top:12px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0e121c;min-height:70vh}
-  iframe{display:block;width:100%;height:78vh;border:0;background:#0e121c}
-  @media (max-width:720px){
-    .tab{padding:8px 10px;font-size:14px}
-    #userBox{display:none}
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Nitro Poker Tools</title>
+  <style>
+    :root{--bg:#0b0e13;--panel:#0f1420;--text:#e8edf6;--muted:#9aa7b6;--border:#213047;--accent:#3ea0ff;--accent2:#1b66ff;--danger:#ff4d4d}
+    html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.5 system-ui}
+    .wrap{max-width:1200px;margin:0 auto;padding:12px}
+    .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:8px 10px;position:sticky;top:8px;z-index:5}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#1a2741;color:#fff;font-weight:600;cursor:pointer}
+    .tab:hover{filter:brightness(1.08)}
+    .tab.active{background:var(--accent);border-color:#2c79bf;color:#051422}
+    .right{display:flex;gap:8px;align-items:center;color:var(--muted)}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#223455;color:#fff;cursor:pointer}
+    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));border:none}
+    .btn.danger{background:#4a1f24;border-color:#6b2a32;color:#ffb3b3}
+    #userBox{min-width:140px;text-align:right}
+    #stage{margin-top:12px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0e121c;min-height:70vh}
+    iframe{display:block;width:100%;height:78vh;border:0;background:#0e121c}
+    @media (max-width:720px){ .tab{padding:8px 10px;font-size:14px} #userBox{display:none} }
+  </style>
 </head>
 <body>
 <div class="wrap">
@@ -42,10 +39,11 @@
   </div>
 
   <p style="color:#9aa7b6;font-size:12px;margin-top:10px">
-    Для быстрых тестов и мини‑утилит держи под рукой <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#3ea0ff">gptonline.ai</a>
+    Быстрые мини‑инструменты держи под рукой — <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#3ea0ff">gptonline.ai</a>
   </p>
 </div>
 
+<!-- ВАЖНО: модуль -->
 <script type="module" src="./app.js"></script>
 </body>
 </html>
