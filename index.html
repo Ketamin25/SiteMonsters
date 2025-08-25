@@ -1,49 +1,150 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
+  <title>Nitro EV калькулятор (Winamax)</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Nitro Poker Tools</title>
   <style>
-    :root{--bg:#0b0e13;--panel:#0f1420;--text:#e8edf6;--muted:#9aa7b6;--border:#213047;--accent:#3ea0ff;--accent2:#1b66ff;--danger:#ff4d4d}
-    html,body{margin:0;background:radial-gradient(1200px 600px at 60% -150px,#151a27 0,#0a0a0c 55%);color:var(--text);font:16px/1.5 system-ui}
-    .wrap{max-width:1200px;margin:0 auto;padding:12px}
-    .nav{display:flex;gap:10px;justify-content:space-between;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:8px 10px;position:sticky;top:8px;z-index:5}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#1a2741;color:#fff;font-weight:600;cursor:pointer}
-    .tab:hover{filter:brightness(1.08)}
-    .tab.active{background:var(--accent);border-color:#2c79bf;color:#051422}
-    .right{display:flex;gap:8px;align-items:center;color:var(--muted)}
-    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#223455;color:#fff;cursor:pointer}
-    .btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent2));border:none}
-    .btn.danger{background:#4a1f24;border-color:#6b2a32;color:#ffb3b3}
-    #userBox{min-width:140px;text-align:right}
-    #stage{margin-top:12px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0e121c;min-height:70vh}
-    iframe{display:block;width:100%;height:78vh;border:0;background:#0e121c}
-    @media (max-width:720px){ .tab{padding:8px 10px;font-size:14px} #userBox{display:none} }
+    body { font-family: Arial, sans-serif; margin: 24px; background:#0b0e13; color:#eaeef3; }
+    input, select, button { margin: 8px 0; padding: 8px; border-radius:8px; border:1px solid #2a3240; background:#161b22; color:#eaeef3; }
+    button { cursor: pointer; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    table { border-collapse: collapse; margin-top:16px; background:#0f1420; color:#eaeef3; }
+    th, td { border:1px solid #2a3240; padding:6px 8px; text-align:center; }
+    th { background:#131a29; }
+    .result { margin-top:16px; font-weight:700; font-size:18px; }
+    a { color:#7cc7ff; }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="nav">
-    <div class="tabs" id="tabs"></div>
-    <div class="right">
-      <span id="userBox">не авторизован</span>
-      <button id="login"  class="btn primary">Войти Google</button>
-      <button id="logout" class="btn danger" style="display:none">Выйти</button>
-    </div>
+  <div class="row" style="justify-content:space-between">
+    <h1 style="margin:0">Nitro EV калькулятор (Winamax)</h1>
+    <small>быстро делиться прототипом удобно через <a href="https://gptonline.ai/" target="_blank" rel="noopener">gptonline.ai</a></small>
   </div>
 
-  <div id="stage">
-    <iframe id="frame" src="about:blank" referrerpolicy="no-referrer"></iframe>
+  <div class="row">
+    <label>Лимит:
+      <select id="limit">
+        <option value="25" selected>25 €</option>
+        <option value="50">50 €</option>
+        <option value="100">100 €</option>
+      </select>
+    </label>
+
+    <label>ChipEV:
+      <input id="ce" type="number" value="18" step="0.01">
+    </label>
+
+    <label>Турниров:
+      <input id="tournaments" type="number" value="15000" step="100">
+    </label>
+
+    <label>Рейк:
+      <input id="rake" type="number" value="7" step="0.1"> %
+    </label>
+
+    <button id="calcBtn">Рассчитать</button>
   </div>
 
-  <p style="color:#9aa7b6;font-size:12px;margin-top:10px">
-    Быстрые мини‑инструменты держи под рукой — <a href="https://gptonline.ai/" target="_blank" rel="noreferrer" style="color:#3ea0ff">gptonline.ai</a>
-  </p>
-</div>
+  <small>Отмечай, какие множители входят в пул (как в столбце “% in pool”): по умолчанию включены ×2…×1000, топ‑джек — выключен.</small>
+  <div id="table"></div>
 
-<!-- ВАЖНО: модуль -->
-<script type="module" src="./app.js"></script>
+  <div class="result" id="output"></div>
+
+<script>
+const STRUCT = {
+  25: [
+    {m:40000, p:10/1e7,   pay:[32000,4800,3200]}, // €1,000,000
+    {m:1000,  p:100/1e7,  pay:[800,120, 80]},     // €25,000
+    {m:100,   p:2000/1e7, pay:[80,12, 8]},        // €2,500
+    {m:50,    p:10000/1e7,pay:[40,6, 4]},         // €1,250
+    {m:10,    p:150000/1e7,pay:[10,0, 0]},        // €250
+    {m:5,     p:400000/1e7,pay:[5, 0, 0]},        // €125
+    {m:4,     p:825000/1e7,pay:[4, 0, 0]},        // €100
+    {m:3,     p:2674220/1e7,pay:[3, 0, 0]},       // €75
+    {m:2,     p:5938670/1e7,pay:[2, 0, 0]},       // €50
+  ],
+  50: [
+    {m:20000, p:20/1e7,   pay:[32000,4800,3200]},
+    {m:1000,  p:100/1e7,  pay:[800,120, 80]},
+    {m:100,   p:2000/1e7, pay:[80,12, 8]},
+    {m:50,    p:10000/1e7,pay:[40,6, 4]},
+    {m:10,    p:150000/1e7,pay:[10,0, 0]},
+    {m:5,     p:400000/1e7,pay:[5, 0, 0]},
+    {m:4,     p:825000/1e7,pay:[4, 0, 0]},
+    {m:3,     p:2674240/1e7,pay:[3, 0, 0]},
+    {m:2,     p:5938640/1e7,pay:[2, 0, 0]},
+  ],
+  100: [
+    {m:10000, p:4/1e6,    pay:[32000,4800,3200]},
+    {m:1000,  p:20/1e6,   pay:[800,120, 80]},
+    {m:100,   p:200/1e6,  pay:[80,12, 8]},
+    {m:50,    p:1000/1e6, pay:[40,6, 4]},
+    {m:10,    p:15000/1e6,pay:[10,0, 0]},
+    {m:5,     p:40000/1e6,pay:[5, 0, 0]},
+    {m:4,     p:80000/1e6,pay:[4, 0, 0]},
+    {m:3,     p:262448/1e6,pay:[3, 0, 0]},
+    {m:2,     p:601328/1e6,pay:[2, 0, 0]},
+  ]
+};
+
+// включение множителей (по умолчанию x2…x1000 в пуле, топ-джекпоты — нет)
+let inPool = {};
+function renderTable(limit){
+  const rows = STRUCT[limit].map(r=>{
+    const key = `${limit}_${r.m}`;
+    if (inPool[key] === undefined) inPool[key] = (r.m <= 1000);
+    return `<tr>
+      <td>×${r.m}</td>
+      <td>${(r.p*100).toFixed(5)}%</td>
+      <td>${r.pay[0]}</td><td>${r.pay[1]}</td><td>${r.pay[2]}</td>
+      <td><input type="checkbox" ${inPool[key]?'checked':''} data-key="${key}"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('table').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Множитель</th><th>Prob</th><th>1-е</th><th>2-е</th><th>3-е</th><th>% в пуле</th>
+      </tr></thead><tbody>${rows}</tbody>
+    </table>`;
+  document.querySelectorAll('input[type=checkbox][data-key]').forEach(cb=>{
+    cb.onchange = ()=>{ inPool[cb.dataset.key] = cb.checked; };
+  });
+}
+
+function calculate(){
+  const limit = +document.getElementById('limit').value;
+  const CE = +document.getElementById('ce').value;
+  const N  = +document.getElementById('tournaments').value;
+  const rake = +document.getElementById('rake').value/100;
+
+  // ITM по «шитовой» формуле: Win% = (Stack + CE)/(3*Stack)
+  const stack = 300;
+  const win = Math.max(0, Math.min(1, (stack + CE) / (3*stack)));
+  const lose = 1 - win;
+
+  const list = STRUCT[limit].filter(r => inPool[`${limit}_${r.m}`]);
+  const sumP = list.reduce((s,r)=>s+r.p, 0);
+  if (!sumP) { document.getElementById('output').textContent='Пул пуст.'; return; }
+
+  // средневзвешенные выплаты по пулу (в евро)
+  const Avg1 = list.reduce((s,r)=> s + (r.p/sumP) * (limit * r.pay[0]), 0);
+  const Avg2 = list.reduce((s,r)=> s + (r.p/sumP) * (limit * r.pay[1]), 0);
+  const Avg3 = list.reduce((s,r)=> s + (r.p/sumP) * (limit * r.pay[2]), 0);
+
+  const expPayout = win*Avg1 + lose*(Avg2+Avg3)/2;
+  const EVgame = expPayout - limit - limit*rake;
+  const pool = EVgame * N;
+
+  document.getElementById('output').innerHTML =
+    `Win% ≈ ${(win*100).toFixed(2)}% | Avg1=${Avg1.toFixed(2)}€, Avg2=${Avg2.toFixed(2)}€, Avg3=${Avg3.toFixed(2)}€<br>`+
+    `EV/игру ≈ ${EVgame.toFixed(4)} € → PoolEV ≈ ${pool.toFixed(2)} € за ${N} турниров`;
+}
+
+document.getElementById('limit').onchange = ()=>{ renderTable(+limit.value); calculate(); };
+document.getElementById('calcBtn').onclick = calculate;
+renderTable(+document.getElementById('limit').value);
+calculate();
+</script>
 </body>
 </html>
