@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Простые проценты + ежемесячный депозит (без реинвеста)</title>
+<style>
+  :root{--bg:#0f1326;--card:#151c34;--text:#eaf1ff;--muted:#a9b3c9;--line:#24304f;--good:#2fd27d}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 Inter,system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:760px;margin:36px auto;padding:0 16px}
+  h1{margin:0 0 6px;font-size:26px}
+  .sub{color:var(--muted);margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  label{display:block;font-weight:600;margin-bottom:6px}
+  input,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0e162e;color:var(--text)}
+  .kpi{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .box{background:#0d142a;border:1px solid var(--line);border-radius:12px;padding:12px}
+  .val{font-size:22px;font-weight:800;margin-top:4px}
+  .good{color:var(--good)}
+  .hint{font-size:13px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Калькулятор простых процентов (без реинвеста)</h1>
+  <div class="sub">APR без капитализации + ежемесячный депозит. Взнос считается внесённым в <b>начале</b> месяца и приносит проценты до конца срока.</div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label>Стартовая сумма, USD</label>
+        <input id="principal" type="number" value="10000" step="100" min="0">
+      </div>
+      <div>
+        <label>Годовая ставка (APR), %</label>
+        <input id="rate" type="number" value="12" step="0.01" min="0">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label>Срок</label>
+        <input id="term" type="number" value="12" step="1" min="1">
+      </div>
+      <div>
+        <label>Единица срока</label>
+        <select id="unit">
+          <option value="months" selected>Месяцы</option>
+          <option value="days">Дни</option>
+          <option value="years">Годы</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label>Ежемесячный депозит, USD</label>
+        <input id="monthly" type="number" value="0" step="10" min="0">
+      </div>
+      <div>
+        <label>Начисление процентов на депозиты</label>
+        <select id="depositTiming">
+          <option value="start" selected>С начала месяца (больше процентов)</option>
+          <option value="end">С конца месяца (меньше процентов)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="kpi">
+      <div class="box">
+        <div>Итоговая сумма</div>
+        <div id="fv" class="val">$0</div>
+      </div>
+      <div class="box">
+        <div>Начисленные проценты</div>
+        <div id="interest" class="val good">$0</div>
+      </div>
+    </div>
+
+    <div class="hint" id="details">—</div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fmtUSD = x => isFinite(x) ? x.toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:2}) : '—';
+
+// перевод срока в месяцы и годы
+function toMonths(term, unit){
+  const t = Math.max(0, term||0);
+  if(unit==='months') return t;
+  if(unit==='years')  return t*12;
+  // days -> months (среднее кол-во дней в месяце)
+  return t/30.4375;
+}
+function toYears(months){ return months/12; }
+
+// основной расчёт (простые проценты; без реинвеста)
+function calc(){
+  const P   = Math.max(0, parseFloat($('principal').value)||0);
+  const APR = Math.max(0, parseFloat($('rate').value)||0)/100;
+  const nM  = toMonths(parseFloat($('term').value||0), $('unit').value); // месяцы (может быть нецелым)
+  const years = toYears(nM);
+
+  const M = Math.max(0, parseFloat($('monthly').value)||0);
+  const timing = $('depositTiming').value; // start / end
+
+  // проценты на стартовый капитал (простые): I0 = P * APR * years
+  const I0 = P * APR * years;
+
+  // проценты на ежемесячные депозиты.
+  // Если вносим "в начале месяца i" (i=0..k-1), то каждый вклад работает (k-i)/12 лет.
+  // Если "в конце месяца", то (k-i-1)/12 лет (минимум 0).
+  const k = Math.max(0, Math.floor(nM + 1e-9)); // целое число полных месяцев
+  let Idep = 0;
+  for(let i=0;i<k;i++){
+    const remMonths = timing==='start' ? (k - i) : Math.max(0, k - i - 1);
+    Idep += M * APR * (remMonths/12);
+  }
+
+  const totalInvested = P + M * k;
+  const interest = I0 + Idep;
+  const FV = totalInvested + interest;
+
+  $('fv').textContent = fmtUSD(FV);
+  $('interest').textContent = fmtUSD(interest);
+  $('details').textContent =
+    `Инвестировано: ${fmtUSD(totalInvested)} • Проценты по стартовой сумме: ${fmtUSD(I0)} • ` +
+    `Проценты по депозитам: ${fmtUSD(Idep)} • Месяцев: ${k}`;
+}
+
+['principal','rate','term','unit','monthly','depositTiming'].forEach(id=>{
+  const el = $(id);
+  el.addEventListener('input', calc);
+  el.addEventListener('change', calc);
+});
+calc();
+</script>
+</body>
+</html>
